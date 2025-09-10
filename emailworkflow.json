@@ -1,0 +1,182 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4f91bf2d-26aa-4f2c-86b1-bd2c1f7a44a8",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1bE5Da3NIYbuHPPQ1q2axfp7NhQtYDzLPN3Ey5NXDYZE/edit?resourcekey=&gid=1849328569#gid=1849328569",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Form Responses 1",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        176,
+        160
+      ],
+      "id": "00d77e2f-1ed3-4ed8-8ec0-8c39b2822ce8",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dGyWW4CInxdL4rhS",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "abdullahmkhalidk2021@gmal.com",
+        "toEmail": "={{$node[\"Get row(s) in sheet\"].json[\"Email Address\"]}}",
+        "subject": "Thanks for your project inquiry",
+        "html": "=Hi {{$node[\"Get row(s) in sheet\"].json[\"Name\"]}},<br><br>\n\n<br><br>\n\n{{$node[\"HTTP Request\"].json[\"candidates\"][0][\"content\"][\"parts\"][0][\"text\"]}}<br><br>\n\nBest regards,<br>\nAbdullah Khalid<br>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        864,
+        80
+      ],
+      "id": "2a5be017-0110-4e59-b4c8-41d130fecb45",
+      "name": "Send email",
+      "webhookId": "55e01ec7-f43f-4c98-9eb5-93bc0a55979c",
+      "credentials": {
+        "smtp": {
+          "id": "nR592yaHgCIOLQDh",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=Your API KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        608,
+        240
+      ],
+      "id": "cb5aa360-ac12-4fef-aeae-453cfbf41f51",
+      "name": "HTTP Request",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all rows from Google Sheets\nconst allData = $input.all();\n\n// Process each row individually\nconst results = [];\nfor (const item of allData) {\n  const sheetData = item.json;\n  \n  const promptText = `Write a 3-line professional thank you email to ${sheetData['Name']} for inquiring about ${sheetData['  Service You’re Interested In  ']} services. Their project: ${sheetData['  Project Requirements / Description  ']}. Keep it concise without placeholders and no subject line no regards no yours truly etc. nothing but parapgrahph. ive already added HI NAME and Regards Myname so dont add it and try to not start with Dear Name cuz ive already added Hi name in the starting but you can add their name in the paragraph but not at starting like starting with their name just a brief paragraph.`;\n\n  results.push({\n    json: {\n      \"contents\": [\n        {\n          \"parts\": [\n            {\n              \"text\": promptText\n            }\n          ]\n        }\n      ]\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        352
+      ],
+      "id": "f6a7de93-4507-4b82-be4f-df93be39de1a",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c995a084-d13e-4b7b-8ec5-f56890db3dde",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "92de12a93bb2139870f5d89333f8c6854e1d0cff88416f829730ebe24464ac4a"
+  },
+  "id": "7zq3FoNg4TR02K6K",
+  "tags": []
+}
